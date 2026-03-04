@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using MvcCoreSessionEmpleados.Extensions;
 using MvcCoreSessionEmpleados.Models;
 using MvcCoreSessionEmpleados.Repositories;
@@ -8,10 +9,11 @@ namespace MvcCoreSessionEmpleados.Controllers;
 public class EmpleadosController : Controller
 {
     private RepositoryEmpleados _repo;
-
-    public EmpleadosController(RepositoryEmpleados repo)
+    private IMemoryCache _memoryCache;
+    public EmpleadosController(RepositoryEmpleados repo,IMemoryCache memoryCache)
     {
         _repo = repo;
+        _memoryCache = memoryCache;
     }
 
     // GET
@@ -168,6 +170,106 @@ public class EmpleadosController : Controller
             return View(empleados);
         }
     }
+    
+
+    public async Task<IActionResult> SessionEmpleadosV5
+        (int? idempleado,int? idfavorito)
+    {
+        if (idfavorito != null)
+        {
+            //COMO ESTOY GUARDANDO EN CACHE, VAMOS A GUARDAR
+            //DIRECTAMENTE LOS OBJETOS EN LUGAR DE LOS IDS
+
+            List<Empleado> empleadosFavoritos;
+            if (_memoryCache.Get("FAVORITOS") == null)
+            {
+                //NO EXISTE NADA EN CACHE
+
+                empleadosFavoritos = new List<Empleado>();
+
+            }
+            else
+            {
+                //RECUPERAMOS EL CACHE
+                empleadosFavoritos= _memoryCache.Get<List<Empleado>>("FAVORITOS");
+            }
+            
+            
+            //BUSCAMOS AL EMPLEADO PARA GUARDARLO
+            Empleado empleadoFavorito = await _repo.FindEmpleadoAsync(idfavorito.Value);
+            empleadosFavoritos.Add(empleadoFavorito);
+            _memoryCache.Set("FAVORITOS", empleadosFavoritos);
+        }
+        
+        if (idempleado != null)
+        {
+            //ALMACENAMOS LO MINIMO...
+            List<int> idsEmpleadosList;
+            if (HttpContext.Session.GetObject<List<int>>
+                    ("IDSEMPLEADOS") != null)
+            {
+                //RECUPERAMOS LA COLECCION
+                idsEmpleadosList =
+                    HttpContext.Session.GetObject<List<int>>("IDSEMPLEADOS");
+            }
+            else
+            {
+                //CREAMOS LA COLECCION
+                idsEmpleadosList = new List<int>();
+            }
+            //ALMACENAMOS EL ID DEL EMPLEADO
+            idsEmpleadosList.Add(idempleado.Value);
+            //ALMACENAMOS EN SESSION LOS DATOS
+            HttpContext.Session.SetObject("IDSEMPLEADOS", idsEmpleadosList);
+            ViewData["MENSAJE"] = "Empleados almacenados: "
+                                  + idsEmpleadosList.Count;
+        }
+        
+        List<Empleado> empleados = await _repo.GetEmpleadosAsync();
+        return View(empleados);
+    }
+
+    public IActionResult EmpleadosFavoritos()
+    {
+        return View();
+    }
+  
+    public async Task<IActionResult> EmpleadosAlmacenadosV5(int? ideliminar)
+    {
+        //RECUPERAMOS LA COLECCION DE SESSION
+        List<int> idsEmpleados =
+            HttpContext.Session.GetObject<List<int>>("IDSEMPLEADOS");
+        if (idsEmpleados == null)
+        {
+            ViewData["MENSAJE"] = "No existen empleados en Session";
+            return View();
+        }
+        else
+        {
+            //PREGUNTAMOS SI HEMOS RECIBIDO ALGUN DATO PARA ELIMINAR
+
+            if (ideliminar != null)
+            {
+                idsEmpleados.Remove(ideliminar.Value);
+                
+
+                if (idsEmpleados.Count == 0)
+                {
+                    HttpContext.Session.Remove("IDSEMPLEADOS");
+                }
+                else
+                {
+                    //ACTUALIZAMOS SESSION
+                    HttpContext.Session.SetObject("IDSEMPLEADOS", idsEmpleados);
+                    
+                }
+            }
+            List<Empleado> empleados =
+                await _repo.GetEmpleadosSessionAsync(idsEmpleados);
+            return View(empleados);
+        }
+    }
+    
 
 
     public IActionResult EmpleadosAlmacenados()

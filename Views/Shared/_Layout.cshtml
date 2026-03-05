@@ -1,4 +1,9 @@
-﻿<!DOCTYPE html>
+﻿@{
+    //NECESITAMOS SESSION EN LA VISTA PARA COMPROBAR SUS DATOS
+    List<int> ids= Context.Session.GetObject<List<int>>("IDSEMPLEADOS");
+    List<Empleado> favoritos=memoryCache.Get<List<Empleado>>("FAVORITOS");
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -32,6 +37,24 @@
                             <a class="nav-link text-dark" asp-area=""
                                asp-controller="Empleados" 
                                asp-action="Index">Session</a>
+                        </li>    
+                        <li class="nav-item">
+                           @if (ids != null)
+                           {
+                               <h6 class="text-warning">Compras: @ids.Count </h6>
+                           }
+                           else
+                           {
+                               <h6 class="text-warning">Compras: 0 </h6>
+                           }
+                           @if (favoritos != null)
+                           {
+                               <h6 class="text-warning">Favoritos: @favoritos.Count </h6>
+                           }
+                           else
+                           {
+                               <h6 class="text-warning">Favoritos: 0</h6>
+                           }
                         </li>
                     </ul>
                 </div>

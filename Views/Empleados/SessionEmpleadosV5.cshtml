@@ -9,33 +9,6 @@
 <h1 style="color:orange">Empleados V5 Ok</h1>
 
 
-@if (ids != null)
-{
-    <h3 class="bg-primary">
-        Empleados en session: @ids.Count
-    </h3>
-}
-else
-{
-    <h3 class="bg-primary">
-        Empleados en session: 0
-    </h3>
-}
-
-@if (favoritos != null)
-{
-    <h3 class="bg-primary">
-      Favoritos: @favoritos.Count
-    </h3>
-}
-else
-{
-    <h3 class="bg-primary">
-        Favoritos : 0
-    </h3>
-}
-
-
 <p>
     <a asp-controller="Empleados"
        asp-action="EmpleadosAlmacenadosV5">
@@ -55,21 +28,43 @@ else
     {
         <li class="list-group-item list-group-item-danger">
             @emp.Apellido
-            @*PREGUNTAMOS SI EXISTE EL EMPLEADO EN SESSION*@
-            <a asp-controller="Empleados"
-               asp-action="SessionEmpleadosV5"
-               asp-route-idfavorito="@emp.IdEmpleado">
-                Favorito
-            </a>
+            @if (favoritos == null)
+            {
+                <a asp-controller="Empleados"
+                   asp-action="SessionEmpleadosV5"
+                   asp-route-idfavorito="@emp.IdEmpleado">
+                    Favorito</a>
+            }
+            else
+            {
+                //DEBEMOS PREGUNTAR SI EXISTE EL EMPLEADO CON EL ID QUE HEMOS ALMACENADO
+                //BUSCAMOS DENTRO DE FAVORITO SI ESTA NUESTRO EMPLEADO
+                Empleado empFavorito = favoritos.Find(x => x.IdEmpleado == @emp.IdEmpleado);
+
+                if (empFavorito == null)
+                {
+                    <a asp-controller="Empleados"
+                       asp-action="SessionEmpleadosV5"
+                       asp-route-idfavorito="@emp.IdEmpleado">
+                        Favorito</a>
+                }
+                else
+                {
+                    <svg width="30px" height="30px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#0bbc2e"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M4.89163 13.2687L9.16582 17.5427L18.7085 8" stroke="#0bbc2e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                }
+            }
+
+
+
             @*PREGUNTAMOS SI EXISTE EL EMPLEADO EN SESSION*@
             @if (ids == null)
             {
                 //NO TENEMOS SESSION
-                    <a asp-controller="Empleados"
-                       asp-action="SessionEmpleadosV5"
-                       asp-route-idEmpleado="@emp.IdEmpleado" class="btn btn-primary">
-                        Almacenar empleado
-                    </a>
+                <a asp-controller="Empleados"
+                   asp-action="SessionEmpleadosV5"
+                   asp-route-idEmpleado="@emp.IdEmpleado" class="btn btn-primary">
+                    Almacenar empleado
+                </a>
             }
             else
             {
@@ -81,12 +76,12 @@ else
                 }
                 else
                 {
-                    
-                        <a asp-controller="Empleados"
-                           asp-action="SessionEmpleadosV5"
-                           asp-route-idEmpleado="@emp.IdEmpleado" class="btn btn-primary">
-                            Almacenar empleado @emp.Apellido
-                        </a>
+
+                    <a asp-controller="Empleados"
+                       asp-action="SessionEmpleadosV5"
+                       asp-route-idEmpleado="@emp.IdEmpleado" class="btn btn-primary">
+                        Almacenar empleado @emp.Apellido
+                    </a>
                 }
             }
         </li>   

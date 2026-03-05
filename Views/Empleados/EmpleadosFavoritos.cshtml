@@ -25,6 +25,7 @@
             <th>Oficio</th>
             <th>Salario</th>
             <th>Departamento</th>
+            <th></th>
         </tr>
         </thead>
         <tbody>
@@ -36,6 +37,14 @@
                 <td>@emp.Oficio</td>
                 <td>@emp.Salario</td>
                 <td>@emp.IdDepartamento</td>
+                <td>
+                    <a asp-controller="Empleados"
+                       asp-action="EmpleadosFavoritos"
+                       asp-route-ideliminar="@emp.IdEmpleado"
+                       class="btn btn-danger">
+                        Delete
+                    </a>
+                </td>
             </tr>
         }
         </tbody>
